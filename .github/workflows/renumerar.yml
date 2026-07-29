@@ -1,0 +1,38 @@
+name: Renumerar EXTINF
+
+on:
+  push:
+    paths:
+      - "lista.m3u8"
+
+permissions:
+  contents: write
+
+jobs:
+  renumerar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Renumerar EXTINF
+        run: |
+          awk '
+          BEGIN { n=1 }
+          /^#EXTINF:-[0-9]+,/ {
+            sub(/-[0-9]+,/, "-" n ",")
+            n++
+          }
+          { print }
+          ' lista.m3u8 > temp.m3u8
+
+          mv temp.m3u8 lista.m3u8
+
+      - name: Commit cambios
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add lista.m3u8
+          git diff --cached --quiet || git commit -m "Renumerar EXTINF automáticamente"
+          git push
